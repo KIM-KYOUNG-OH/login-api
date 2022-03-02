@@ -160,4 +160,13 @@ gradle-app.setting
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
 
-# End of https://www.toptal.com/developers/gitignore/api/intellij,java,gradle
+.idea
+
+.gradle
+gradle
+
+HELP.md
+
+gradlew
+gradlew.bat
+settings.gradle

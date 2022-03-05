@@ -1,5 +1,6 @@
 package com.study.loginapi.service;
 
+import com.study.loginapi.dto.SignInRequestDto;
 import com.study.loginapi.dto.SignUpRequestDto;
 import com.study.loginapi.entity.Member;
 import lombok.RequiredArgsConstructor;
@@ -29,5 +30,16 @@ public class LoginServiceImpl implements LoginService {
                         .build();
 
         memberService.saveMember(member);
+    }
+
+    public String login(SignInRequestDto signInRequestDto) {
+
+        String memberId = signInRequestDto.getId();
+        int cnt = memberService.getCountById(memberId);
+        if(cnt == 0) {
+            throw new IllegalArgumentException("current user is not existed");
+        }
+
+        return signInRequestDto.getId();
     }
 }

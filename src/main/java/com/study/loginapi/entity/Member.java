@@ -8,15 +8,17 @@ import org.apache.ibatis.type.Alias;
 
 @Alias("Member")
 @Getter
-@Builder
+@Builder(builderMethodName = "memberBuilder")
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Member {
 
-    private Long memberId;
-    private String nickname;
+    private String memberId;
+    private String name;
     private String password;
     private String email;
 
-    public static MemberBuilder builder(String nickname, String password) {
-        return new MemberBuilder().nickname(nickname).password(password);
+    public static MemberBuilder builder(String memberId) {
+        if(memberId == null) throw new IllegalArgumentException("memberId is required");
+        return memberBuilder().memberId(memberId);
     }
 }

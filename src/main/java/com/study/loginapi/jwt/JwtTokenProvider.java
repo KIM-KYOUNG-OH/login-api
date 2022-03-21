@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import javax.xml.bind.DatatypeConverter;
 import java.security.Key;
 import java.util.Date;
 
@@ -16,7 +15,6 @@ import java.util.Date;
 @Slf4j
 public class JwtTokenProvider {
     private Key secretKey;
-    private Key refreshKey;
 
     private final long ACCESS_TOKEN_VALID_TIME = 1 * 60 * 1000L;   // 1분
     private final long REFRESH_TOKEN_VALID_TIME = 60 * 60 * 24 * 7 * 1000L;   // 1주
@@ -24,17 +22,16 @@ public class JwtTokenProvider {
     @PostConstruct
     protected void init() {
         secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-        refreshKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
         log.info("secretKey: " + secretKey);
-        log.info("refreshKey: " + refreshKey);
     }
 
     public String createAccessToken(String memberId) {
-        Claims claims = Jwts.claims();//.setSubject(userPk); // JWT payload 에 저장되는 정보단위
-        claims.put("memberId", memberId);
+        Claims claims = Jwts.claims();
+        claims.put("memberId", memberId); //
         Date now = new Date();
+
         return Jwts.builder()
-                .setClaims(claims) // 정보 저장
+                .setClaims(claims)
                 .setIssuedAt(now) // 토큰 발행 시간 정보
                 .setExpiration(new Date(now.getTime() + ACCESS_TOKEN_VALID_TIME)) // set Expire Time
                 .signWith(secretKey)
@@ -45,38 +42,34 @@ public class JwtTokenProvider {
         Claims claims = Jwts.claims();
         claims.put("memberId", memberId); //
         Date now = new Date();
-        Date expiration = new Date(now.getTime() + REFRESH_TOKEN_VALID_TIME);
 
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(now)
-                .setExpiration(expiration)
-                .signWith(refreshKey)
+                .setExpiration(new Date(now.getTime() + REFRESH_TOKEN_VALID_TIME))
+                .signWith(secretKey)
                 .compact();
     }
 
-    public boolean isValidRefreshToken(String refreshToken) {
+    public boolean isValidToken(String token) {
         try {
-            Claims accessClaims = getClaimsToken(refreshToken);
-            System.out.println("Access expireTime: " + accessClaims.getExpiration());
-            System.out.println("Access userId: " + accessClaims.get("userId"));
-            return true;
-        } catch (ExpiredJwtException exception) {
-            System.out.println("Token Expired UserID : " + exception.getClaims().get("userId"));
+            Jws<Claims> claims = Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token);
+
+            log.info(claims.getHeader().toString());
+            log.info(claims.getBody().toString());
+            log.info(claims.getSignature());
+        } catch (JwtException e) {
+            log.info("Token is invalid!");
             return false;
-        } catch (JwtException exception) {
-            System.out.println("Token Tampered");
-            return false;
-        } catch (NullPointerException exception) {
-            System.out.println("Token is null");
+        } catch (NullPointerException e) {
+            log.info("Token is absent!");
             return false;
         }
+
+        return true;
     }
 
-    private Claims getClaimsToken(String refreshToken) {
-        return Jwts.parser()
-                .setSigningKey(DatatypeConverter.parseBase64Binary(String.valueOf(refreshKey)))
-                .parseClaimsJws(refreshToken)
-                .getBody();
-    }
 }

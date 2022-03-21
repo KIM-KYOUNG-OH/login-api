@@ -3,13 +3,11 @@ package com.study.loginapi.repository;
 import com.study.loginapi.entity.Auth;
 import org.apache.ibatis.annotations.Mapper;
 
-import java.util.Optional;
-
 @Mapper
 public interface AuthMapper {
-    void save(Auth auth);
+    Auth findOneByMemberId(Long memberId);
 
-    Optional<Auth> findOneByMemberId(Long memberId);
+    int saveAuth(Auth auth);
 
-    Integer updateByAuthId(Long authId, String refreshToken);
+    int updateAuth(Auth auth);
 }

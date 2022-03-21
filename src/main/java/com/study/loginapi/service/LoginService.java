@@ -9,13 +9,9 @@ import com.study.loginapi.exception.*;
 import com.study.loginapi.jwt.JwtTokenProvider;
 import com.study.loginapi.repository.AuthMapper;
 import lombok.RequiredArgsConstructor;
-import org.apache.el.parser.Token;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.swing.text.html.Option;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -53,26 +49,19 @@ public class LoginService {
 
         Member member = memberService.findMemberByEmail(signInRequest.getEmail())
                 .orElseThrow(() -> new AbsentMemberException("Current user is not existed!"));
-        Auth auth = authService.findAuthByMemberId(member.getMemberId())
-                .orElseThrow(() -> new AbsentTokenException("Current user has not any token!"));
+
         if(!passwordEncoder.matches(signInRequest.getPassword(), member.getPassword())) {
             throw new WrongPasswordException("Current password is wrong");
         }
 
-        String accessToken = "";
-        String refreshToken = auth.getRefreshToken();
+        String accessToken = jwtTokenProvider.createAccessToken(member.getEmail());
+        String refreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
 
-        if (jwtTokenProvider.isValidRefreshToken(refreshToken)) {
-            accessToken = jwtTokenProvider.createAccessToken(member.getEmail()); //Access Token 새로 만들어서 줌
-            return TokenResponse.builder()
-                    .accessToken(accessToken)
-                    .refreshToken(refreshToken)
-                    .build();
+        Auth findAuth = authService.findAuthByMemberId(member.getMemberId());  // Optional로 우아하게 바꿀 수 있을까?
+        if(findAuth == null) {
+            authService.saveAuth(accessToken, refreshToken, member.getMemberId());
         } else {
-            //둘 다 새로 발급
-            accessToken = jwtTokenProvider.createAccessToken(member.getEmail());
-            refreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
-            authService.updateRefreshToken(auth.getAuthId(), refreshToken);   //DB Refresh 토큰 갱신
+            authService.updateAuth(findAuth.getAuthId(), accessToken, refreshToken, member.getMemberId());
         }
 
         return TokenResponse.builder()

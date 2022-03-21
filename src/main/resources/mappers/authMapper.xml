@@ -2,11 +2,6 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.study.loginapi.repository.AuthMapper">
-    <insert id="save" parameterType="Auth">
-        insert into auth(access_token, refresh_token, member_id)
-        values(#{accessToken}, #{refreshToken}, #{memberId})
-    </insert>
-
     <select id="findOneByMemberId" parameterType="String" resultType="Auth">
         SELECT
             auth_id, access_token, refresh_token, member_id
@@ -16,11 +11,22 @@
             member_id = #{memberId}
     </select>
 
-    <update id="updateByAuthId" parameterType="String">
-        update
+    <insert id="saveAuth" parameterType="Auth">
+        INSERT
+            access_token,
+            refresh_token,
+            member_id
+        FROM
+            auth
+    </insert>
+
+    <update id="updateAuth" parameterType="Auth">
+        UPDATE
             auth
         SET
-            refresh_token = #{refreshToken}
+            access_token = #{accessToken},
+            refresh_token = #{refreshToken},
+            member_id = #{memberId}
         WHERE
             auth_id = #{authId}
     </update>

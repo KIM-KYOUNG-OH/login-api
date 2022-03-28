@@ -31,8 +31,8 @@ public class MemberService {
     }
 
     @Transactional
-    public void saveMember(Member member) {
-        memberMapper.saveOne(member);
+    public Long saveMember(Member member) {
+        return memberMapper.saveOne(member);
     }
 
     public boolean findByEmail(String email) {

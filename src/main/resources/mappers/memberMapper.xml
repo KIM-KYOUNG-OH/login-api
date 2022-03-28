@@ -52,7 +52,7 @@
             nickname = #{nickname}
     </select>
 
-    <insert id="saveOne" parameterType="Member">
+    <insert id="saveOne" parameterType="Member" useGeneratedKeys="true" keyProperty="memberId">
         INSERT INTO
             member(nickname, password, email)
         VALUES(

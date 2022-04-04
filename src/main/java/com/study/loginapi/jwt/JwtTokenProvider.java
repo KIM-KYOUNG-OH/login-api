@@ -16,8 +16,8 @@ import java.util.Date;
 public class JwtTokenProvider {
     private Key secretKey;
 
-    private final long ACCESS_TOKEN_VALID_TIME = 1 * 60 * 1000L;   // 1분
-    private final long REFRESH_TOKEN_VALID_TIME = 60 * 60 * 24 * 7 * 1000L;   // 1주
+    final long ACCESS_TOKEN_VALID_TIME = 60 * 1000L;   // 1분
+    final long REFRESH_TOKEN_VALID_TIME = 60 * 60 * 24 * 7 * 1000L;   // 1주
 
     @PostConstruct
     protected void init() {
@@ -72,4 +72,11 @@ public class JwtTokenProvider {
         return true;
     }
 
+    public Long getMemberId(String refreshToken) {
+        Jws<Claims> claims = Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(refreshToken);
+        return (Long) claims.getBody().get("memberId");
+    }
 }

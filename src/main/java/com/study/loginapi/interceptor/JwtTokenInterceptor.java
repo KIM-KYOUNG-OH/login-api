@@ -1,5 +1,7 @@
 package com.study.loginapi.interceptor;
 
+import com.study.loginapi.exception.ExpiredTokenException;
+import com.study.loginapi.exception.IncorrectRefreshTokenException;
 import com.study.loginapi.jwt.JwtTokenProvider;
 import com.study.loginapi.service.AuthService;
 import com.study.loginapi.service.LoginService;
@@ -30,10 +32,26 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
         String accessToken = request.getHeader("ACCESS_TOKEN");
         String refreshToken = request.getHeader("REFRESH_TOKEN");
 
-        if(accessToken != null && jwtTokenProvider.isValidToken(accessToken)) {
-            return true;
-        }
+        boolean isValidAccessToken = jwtTokenProvider.isValidToken(accessToken);
+        boolean isValidRefreshToken = jwtTokenProvider.isValidToken(refreshToken);
 
-        return false;
+        if(isValidAccessToken) {
+            return true;
+        } else {
+            if(isValidRefreshToken) {
+                Long memberId = jwtTokenProvider.getMemberId(refreshToken);
+                String refreshTokenInDB = authService.findAuthByMemberId(memberId).getRefreshToken();
+                if(!refreshToken.equals(refreshTokenInDB)) {
+                    throw new IncorrectRefreshTokenException("RefreshToken is not equal with DB!");
+                }
+
+                response.setStatus(401);
+                response.setHeader("ACCESS_TOKEN", accessToken);
+                response.setHeader("REFRESH_TOKEN", refreshToken);
+                response.setHeader("msg", "Recreate Access Token and Refresh Token!");
+                return false;
+            }
+            throw new ExpiredTokenException("Please login again!");
+        }
     }
 }

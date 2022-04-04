@@ -43,6 +43,16 @@ public class GlobalExceptionHandler {
         return ErrorResponse.of(ErrorCode.CANNOT_GENERATE_ID_ERROR);
     }
 
+    @ExceptionHandler(ExpiredTokenException.class)
+    protected ErrorResponse handleExpiredTokenException(ExpiredTokenException e) {
+        return ErrorResponse.of(ErrorCode.EXPIRED_TOKEN_ERROR);
+    }
+
+    @ExceptionHandler(IncorrectRefreshTokenException.class)
+    protected ErrorResponse handleIncorrectRefreshTokenException(IncorrectRefreshTokenException e) {
+        return ErrorResponse.of(ErrorCode.INCORRECT_REFRESH_TOKEN_ERROR);
+    }
+
     // 개발자가 직접 핸들링해서 다른 예외로 던지지 않으면 모두 이곳으로 모인다.
     @ExceptionHandler(Exception.class)
     protected ResponseEntity<ErrorResponse> handleException(Exception e) {

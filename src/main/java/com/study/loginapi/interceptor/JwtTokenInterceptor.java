@@ -1,6 +1,10 @@
 package com.study.loginapi.interceptor;
 
+import com.study.loginapi.exception.ExpiredTokenException;
+import com.study.loginapi.exception.IncorrectRefreshTokenException;
 import com.study.loginapi.jwt.JwtTokenProvider;
+import com.study.loginapi.service.AuthService;
+import com.study.loginapi.service.LoginService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -13,23 +17,41 @@ import javax.servlet.http.HttpServletResponse;
 public class JwtTokenInterceptor implements HandlerInterceptor {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final LoginService loginService;
+    private final AuthService authService;
 
-    public JwtTokenInterceptor(JwtTokenProvider jwtTokenProvider) {
+    public JwtTokenInterceptor(JwtTokenProvider jwtTokenProvider, LoginService loginService, AuthService authService) {
         this.jwtTokenProvider = jwtTokenProvider;
+        this.loginService = loginService;
+        this.authService = authService;
     }
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
         String accessToken = request.getHeader("ACCESS_TOKEN");
-        log.info("AccessToken: " + accessToken);
-        String RefreshToken = request.getHeader("REFRESH_TOKEN");
-        log.info("RefreshToken: " + RefreshToken);
+        String refreshToken = request.getHeader("REFRESH_TOKEN");
 
-        if(accessToken != null && jwtTokenProvider.isValidToken(accessToken)) {
+        boolean isValidAccessToken = jwtTokenProvider.isValidToken(accessToken);
+        boolean isValidRefreshToken = jwtTokenProvider.isValidToken(refreshToken);
+
+        if(isValidAccessToken) {
             return true;
-        }
+        } else {
+            if(isValidRefreshToken) {
+                Long memberId = jwtTokenProvider.getMemberId(refreshToken);
+                String refreshTokenInDB = authService.findAuthByMemberId(memberId).getRefreshToken();
+                if(!refreshToken.equals(refreshTokenInDB)) {
+                    throw new IncorrectRefreshTokenException("RefreshToken is not equal with DB!");
+                }
 
-        return false;
+                response.setStatus(401);
+                response.setHeader("ACCESS_TOKEN", accessToken);
+                response.setHeader("REFRESH_TOKEN", refreshToken);
+                response.setHeader("msg", "Recreate Access Token and Refresh Token!");
+                return false;
+            }
+            throw new ExpiredTokenException("Please login again!");
+        }
     }
 }

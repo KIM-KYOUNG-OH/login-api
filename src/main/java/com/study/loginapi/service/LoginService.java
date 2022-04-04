@@ -26,13 +26,13 @@ public class LoginService {
     @Transactional
     public Long signUp(SignUpRequest signUpRequest) {
 
-        boolean isExisted = memberService.findByEmail(signUpRequest.getEmail());
-        if(!isExisted) {
+        boolean isExist = memberService.findByEmail(signUpRequest.getEmail());
+        if(isExist) {
             throw new DuplicatedEmailException("Current email is duplicated!");
         }
 
-        isExisted = memberService.findByNickname(signUpRequest.getNickname());
-        if(!isExisted) {
+        isExist = memberService.findByNickname(signUpRequest.getNickname());
+        if(isExist) {
             throw new DuplicatedNicknameException("Current nickname is duplicated!");
         }
 
@@ -40,9 +40,13 @@ public class LoginService {
         Member member = Member.builder(signUpRequest.getNickname(), password)
                         .email(signUpRequest.getEmail())
                         .build();
-        memberService.saveMember(member);
 
-        return member.getMemberId();
+        Long memberId = memberService.saveMember(member);
+        if(memberId == null) {
+            throw new CannotGenerateIdException("Fail to generate id!");
+        }
+
+        return memberId;
     }
 
     public TokenResponse login(SignInRequest signInRequest) {

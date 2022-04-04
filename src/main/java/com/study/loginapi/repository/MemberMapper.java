@@ -16,7 +16,7 @@ public interface MemberMapper {
 
     int getCountById(String memberId);
 
-    void saveOne(Member member);
+    Long saveOne(Member member);
 
     boolean findByEmail(String email);
 }

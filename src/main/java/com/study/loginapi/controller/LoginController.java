@@ -5,15 +5,12 @@ import com.study.loginapi.dto.SignUpRequest;
 import com.study.loginapi.dto.TokenResponse;
 import com.study.loginapi.global.SuccessResponse;
 import com.study.loginapi.service.LoginService;
-import com.sun.jdi.request.InvalidRequestStateException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.servlet.http.HttpSession;
 
 @Slf4j
 @RestController
@@ -41,6 +38,11 @@ public class LoginController {
 //
 //        return HttpStatus.OK;
 //    }
+
+    @GetMapping("/test")
+    public SuccessResponse<String> test() {
+        return SuccessResponse.of("test success");
+    }
 
     // 특정 유저의 로그인 상태 정보 조회 api
     // session storage나 token 방식 사용

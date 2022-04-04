@@ -3,6 +3,7 @@ package com.study.loginapi.exception;
 public enum ErrorCode {
 
     // Common
+    CANNOT_GENERATE_ID_ERROR(500, "C003", "Cannot generate id error"),
     INTERNAL_SERVER_ERROR(500, "C004", "Internal server Error"),
 
     // Member
@@ -12,7 +13,10 @@ public enum ErrorCode {
 
     // Auth
     ABSENT_TOKEN_ERROR(400, "A001", "Current user has not any token!"),
-    WRONG_PASSWORD_ERROR(400, "A002", "Current password is wrong");
+    WRONG_PASSWORD_ERROR(400, "A002", "Current password is wrong"),
+    EXPIRED_TOKEN_ERROR(400, "A003", "Please login again!"),
+    INCORRECT_REFRESH_TOKEN_ERROR(400, "A004", "RefreshToken is not equal with DB!");
+
 
     private final int status;
     private final String errorCode;

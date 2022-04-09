@@ -1,5 +1,6 @@
 package com.study.loginapi.jwt;
 
+import com.study.loginapi.exception.AbsentKeyInTokenException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
@@ -25,9 +26,9 @@ public class JwtTokenProvider {
         log.info("secretKey: " + secretKey);
     }
 
-    public String createAccessToken(String memberId) {
+    public String createAccessToken(String email) {
         Claims claims = Jwts.claims();
-        claims.put("memberId", memberId); //
+        claims.put("email", email); //
         Date now = new Date();
 
         return Jwts.builder()
@@ -38,9 +39,9 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String createRefreshToken(String memberId) {
+    public String createRefreshToken(String email) {
         Claims claims = Jwts.claims();
-        claims.put("memberId", memberId); //
+        claims.put("email", email);
         Date now = new Date();
 
         return Jwts.builder()
@@ -61,7 +62,7 @@ public class JwtTokenProvider {
             log.info(claims.getHeader().toString());
             log.info(claims.getBody().toString());
             log.info(claims.getSignature());
-        } catch (JwtException e) {
+        } catch (JwtException e) {  // exception 세분화
             log.info("Token is invalid!");
             return false;
         } catch (NullPointerException e) {
@@ -72,11 +73,17 @@ public class JwtTokenProvider {
         return true;
     }
 
-    public Long getMemberId(String refreshToken) {
-        Jws<Claims> claims = Jwts.parserBuilder()
+    public String getEmail(String refreshToken) {
+        Claims body = Jwts.parserBuilder()
                 .setSigningKey(secretKey)
                 .build()
-                .parseClaimsJws(refreshToken);
-        return (Long) claims.getBody().get("memberId");
+                .parseClaimsJws(refreshToken)
+                .getBody();
+        String email = String.valueOf(body.get("email"));
+        if(email == null) {
+            throw new AbsentKeyInTokenException();
+        }
+
+        return email;
     }
 }

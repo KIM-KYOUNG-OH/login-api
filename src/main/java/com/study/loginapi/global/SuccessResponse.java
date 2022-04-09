@@ -13,7 +13,7 @@ public class SuccessResponse<T> {
     protected SuccessResponse(HttpStatus status, T data) {
         this.status = status.value();
         this.data = data;
-        this.message = null;
+        this.message = "success";
         this.code = null;
     }
 

@@ -1,10 +1,12 @@
-package com.study.loginapi.interceptor;
+package com.study.loginapi.jwt;
 
+import com.study.loginapi.entity.Auth;
+import com.study.loginapi.entity.Member;
+import com.study.loginapi.exception.AbsentMemberException;
 import com.study.loginapi.exception.ExpiredTokenException;
 import com.study.loginapi.exception.IncorrectRefreshTokenException;
-import com.study.loginapi.jwt.JwtTokenProvider;
 import com.study.loginapi.service.AuthService;
-import com.study.loginapi.service.LoginService;
+import com.study.loginapi.service.MemberService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -17,13 +19,13 @@ import javax.servlet.http.HttpServletResponse;
 public class JwtTokenInterceptor implements HandlerInterceptor {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final LoginService loginService;
     private final AuthService authService;
+    private final MemberService memberService;
 
-    public JwtTokenInterceptor(JwtTokenProvider jwtTokenProvider, LoginService loginService, AuthService authService) {
+    public JwtTokenInterceptor(JwtTokenProvider jwtTokenProvider, AuthService authService, MemberService memberService) {
         this.jwtTokenProvider = jwtTokenProvider;
-        this.loginService = loginService;
         this.authService = authService;
+        this.memberService = memberService;
     }
 
     @Override
@@ -39,15 +41,27 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
             return true;
         } else {
             if(isValidRefreshToken) {
-                Long memberId = jwtTokenProvider.getMemberId(refreshToken);
-                String refreshTokenInDB = authService.findAuthByMemberId(memberId).getRefreshToken();
+                String email = jwtTokenProvider.getEmail(refreshToken);
+                Member findMember = memberService.findMemberByEmail(email)
+                        .orElseThrow(() -> new AbsentMemberException("Current user is not existed!"));
+                String refreshTokenInDB = authService.findAuthByMemberId(findMember.getMemberId()).getRefreshToken();
                 if(!refreshToken.equals(refreshTokenInDB)) {
                     throw new IncorrectRefreshTokenException("RefreshToken is not equal with DB!");
                 }
 
+                String newAccessToken = jwtTokenProvider.createAccessToken(email);
+                String newRefreshToken = jwtTokenProvider.createRefreshToken(email);
+
+                Auth findAuth = authService.findAuthByMemberId(findMember.getMemberId());
+                if(findAuth == null) {
+                    authService.saveAuth(newRefreshToken, findMember.getMemberId());
+                } else {
+                    authService.updateAuth(findAuth.getAuthId(), newRefreshToken, findMember.getMemberId());
+                }
+
                 response.setStatus(401);
-                response.setHeader("ACCESS_TOKEN", accessToken);
-                response.setHeader("REFRESH_TOKEN", refreshToken);
+                response.setHeader("ACCESS_TOKEN", newAccessToken);
+                response.setHeader("REFRESH_TOKEN", newRefreshToken);
                 response.setHeader("msg", "Recreate Access Token and Refresh Token!");
                 return false;
             }

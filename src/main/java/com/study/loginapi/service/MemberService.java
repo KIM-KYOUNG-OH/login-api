@@ -3,6 +3,7 @@ package com.study.loginapi.service;
 import com.study.loginapi.entity.Member;
 import com.study.loginapi.repository.MemberMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,6 +11,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MemberService {
 
     private final MemberMapper memberMapper;
@@ -31,8 +33,10 @@ public class MemberService {
     }
 
     @Transactional
-    public Long saveMember(Member member) {
-        return memberMapper.saveOne(member);
+    public Optional<Long> saveMember(Member member) {
+        memberMapper.saveOne(member);
+        log.info("new memberId: " + member.getMemberId());
+        return Optional.ofNullable(member.getMemberId());
     }
 
     public boolean findByEmail(String email) {

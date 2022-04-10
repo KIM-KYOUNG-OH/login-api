@@ -41,12 +41,8 @@ public class LoginService {
                         .email(signUpRequest.getEmail())
                         .build();
 
-        Long memberId = memberService.saveMember(member);
-        if(memberId == null) {
-            throw new CannotGenerateIdException("Fail to generate id!");
-        }
-
-        return memberId;
+        return memberService.saveMember(member)
+                .orElseThrow(() -> new CannotGenerateIdException("Fail to generate id!"));
     }
 
     public TokenResponse login(SignInRequest signInRequest) {
@@ -61,11 +57,11 @@ public class LoginService {
         String accessToken = jwtTokenProvider.createAccessToken(member.getEmail());
         String refreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
 
-        Auth findAuth = authService.findAuthByMemberId(member.getMemberId());  // Optional로 우아하게 바꿀 수 있을까?
+        Auth findAuth = authService.findAuthByMemberId(member.getMemberId());
         if(findAuth == null) {
-            authService.saveAuth(accessToken, refreshToken, member.getMemberId());
+            authService.saveAuth(refreshToken, member.getMemberId());
         } else {
-            authService.updateAuth(findAuth.getAuthId(), accessToken, refreshToken, member.getMemberId());
+            authService.updateAuth(findAuth.getAuthId(), refreshToken, member.getMemberId());
         }
 
         return TokenResponse.builder()

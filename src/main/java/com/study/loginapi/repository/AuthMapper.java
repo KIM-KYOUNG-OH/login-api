@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 public interface AuthMapper {
     Auth findOneByMemberId(Long memberId);
 
-    int saveAuth(Auth auth);
+    void saveAuth(Auth auth);
 
-    int updateAuth(Auth auth);
+    void updateAuth(Auth auth);
 }

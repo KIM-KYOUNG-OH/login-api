@@ -15,14 +15,14 @@ public class AuthService {
         return authMapper.findOneByMemberId(memberId);
     }
 
-    public int saveAuth(String accessToken, String refreshToken, Long memberId) {
-        return authMapper.saveAuth(Auth.builder(accessToken, refreshToken, memberId)
+    public void saveAuth(String refreshToken, Long memberId) {
+        authMapper.saveAuth(Auth.builder(refreshToken, memberId)
                 .build());
     }
 
-    public int updateAuth(Long authId, String accessToken, String refreshToken, Long memberId) {
-        return authMapper.updateAuth(
-                Auth.builder(accessToken, refreshToken, memberId)
+    public void updateAuth(Long authId, String refreshToken, Long memberId) {
+        authMapper.updateAuth(
+                Auth.builder(refreshToken, memberId)
                         .authId(authId)
                         .build());
     }

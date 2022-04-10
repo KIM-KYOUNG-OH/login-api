@@ -4,7 +4,7 @@
 <mapper namespace="com.study.loginapi.repository.MemberMapper">
     <select id="findOneById" parameterType="String" resultType="Member">
         SELECT
-            member_id, name, password, email
+            member_id, nickname, password, email
         FROM
             member
         WHERE
@@ -13,11 +13,11 @@
 
     <select id="findOneByEmail" parameterType="String" resultType="Member">
         SELECT
-            member_id, name, password, email
+            member_id, nickname, password, email
         FROM
             member
         WHERE
-            member_id = #{email}
+            email = #{email}
     </select>
 
     <select id="findByNickname" parameterType="String" resultType="Boolean">
